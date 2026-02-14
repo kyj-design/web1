@@ -25,6 +25,7 @@
       --tag-text: #7ab8ff;
       --danger: #ff4a4a;
       --success: #4aff8b;
+      --locked: #ff9f43;
     }
 
     body {
@@ -121,31 +122,36 @@
       margin-top: 10px;
     }
 
-    .tag-input-wrap {
+    .auto-tag-preview {
       display: flex;
       align-items: center;
       gap: 6px;
       flex: 1;
+      flex-wrap: wrap;
+      min-height: 28px;
     }
 
-    .tag-input-wrap label {
+    .auto-tag-preview .label {
       color: var(--text2);
-      font-size: 13px;
+      font-size: 12px;
+      white-space: nowrap;
     }
 
-    .tag-input {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+    .auto-tag-preview .preview-tag {
+      background: var(--tag-bg);
       color: var(--tag-text);
-      font-size: 13px;
-      padding: 6px 10px;
-      outline: none;
-      width: 160px;
-      font-family: inherit;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 6px;
+      opacity: 0.7;
+      animation: tagPop 0.2s ease;
     }
 
-    .tag-input::placeholder { color: var(--text2); }
+    @keyframes tagPop {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 0.7; }
+    }
 
     .save-btn {
       background: var(--accent);
@@ -158,6 +164,7 @@
       cursor: pointer;
       transition: all 0.15s;
       margin-left: 10px;
+      white-space: nowrap;
     }
 
     .save-btn:hover { background: var(--accent2); }
@@ -186,6 +193,120 @@
 
     .search-input:focus { border-color: var(--accent); }
     .search-input::placeholder { color: var(--text2); }
+
+    /* Stats Panel */
+    .stats-panel {
+      display: none;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stats-panel.show { display: block; }
+
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .stats-header h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .stats-total {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent);
+      background: var(--surface2);
+    }
+
+    .stat-card.active {
+      border-color: var(--tag-text);
+      background: var(--tag-bg);
+    }
+
+    .stat-tag-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--tag-text);
+    }
+
+    .stat-count {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-bar-wrap {
+      margin-top: 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      height: 4px;
+      overflow: hidden;
+    }
+
+    .stat-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .stat-percent {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    .stats-summary {
+      display: flex;
+      gap: 16px;
+      padding: 10px 0;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .summary-item {
+      text-align: center;
+      flex: 1;
+      min-width: 80px;
+    }
+
+    .summary-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .summary-label {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
 
     /* Notes List */
     .notes-container {
@@ -239,6 +360,28 @@
       line-height: 1.55;
       white-space: pre-wrap;
       word-break: break-word;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .note-locked {
+      position: absolute;
+      top: 10px;
+      right: 36px;
+      font-size: 11px;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .note-card:hover .note-locked { opacity: 1; }
+
+    .note-locked svg {
+      width: 12px;
+      height: 12px;
     }
 
     .note-meta {
@@ -266,6 +409,10 @@
     }
 
     .tag:hover { opacity: 0.8; }
+
+    .tag.auto-tag {
+      border: 1px dashed rgba(122, 184, 255, 0.3);
+    }
 
     .note-time {
       font-size: 12px;
@@ -352,6 +499,9 @@
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .filter-tag:hover, .filter-tag.active {
@@ -360,9 +510,20 @@
       border-color: var(--tag-text);
     }
 
+    .filter-tag .count {
+      background: rgba(255,255,255,0.1);
+      padding: 1px 5px;
+      border-radius: 8px;
+      font-size: 10px;
+    }
+
+    .filter-tag.active .count {
+      background: rgba(255,255,255,0.15);
+    }
+
     /* Responsive */
     @media (min-width: 600px) {
-      .capture-area, .search-bar, .notes-container, .filter-bar {
+      .capture-area, .search-bar, .notes-container, .filter-bar, .stats-panel {
         max-width: 640px;
         margin-left: auto;
         margin-right: auto;
@@ -383,6 +544,7 @@
     @media (pointer: coarse) {
       .shortcut-hint { display: none; }
       .note-delete { opacity: 0.6; }
+      .note-locked { opacity: 0.5; }
     }
   </style>
 </head>
@@ -391,6 +553,9 @@
   <div class="header">
     <h1>QuickNote</h1>
     <div class="header-actions">
+      <button class="header-btn" id="statsToggle" title="Tag Statistics">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="18" y="3" width="4" height="18" rx="1"/><rect x="10" y="8" width="4" height="13" rx="1"/><rect x="2" y="13" width="4" height="8" rx="1"/></svg>
+      </button>
       <button class="header-btn" id="searchToggle" title="Search">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       </button>
@@ -401,15 +566,23 @@
   </div>
 
   <div class="capture-area">
-    <textarea class="capture-input" id="noteInput" placeholder="무엇이든 적어두세요..." autofocus></textarea>
+    <textarea class="capture-input" id="noteInput" placeholder="아무렇게나 적어보세요... 태그는 자동으로 붙습니다" autofocus></textarea>
     <div class="capture-actions">
-      <div class="tag-input-wrap">
-        <label>#</label>
-        <input type="text" class="tag-input" id="tagInput" placeholder="태그 (쉼표로 구분)">
+      <div class="auto-tag-preview" id="tagPreview">
+        <span class="label">자동 태그:</span>
       </div>
       <button class="save-btn" id="saveBtn">저장</button>
     </div>
     <div class="shortcut-hint">Ctrl+Enter로 저장</div>
+  </div>
+
+  <div class="stats-panel" id="statsPanel">
+    <div class="stats-header">
+      <h2>태그 통계</h2>
+      <span class="stats-total" id="statsTotal"></span>
+    </div>
+    <div class="stats-summary" id="statsSummary"></div>
+    <div class="stats-grid" id="statsGrid"></div>
   </div>
 
   <div class="search-bar" id="searchBar">
@@ -425,8 +598,9 @@
   <script>
     // ==================== IndexedDB Layer ====================
     const DB_NAME = 'quicknote';
-    const DB_VERSION = 1;
+    const DB_VERSION = 2;
     const STORE_NAME = 'notes';
+    const STATS_STORE = 'tag_stats';
 
     function openDB() {
       return new Promise((resolve, reject) => {
@@ -438,6 +612,9 @@
             store.createIndex('date', 'date', { unique: false });
             store.createIndex('tags', 'tags', { unique: false, multiEntry: true });
           }
+          if (!db.objectStoreNames.contains(STATS_STORE)) {
+            db.createObjectStore(STATS_STORE, { keyPath: 'tag' });
+          }
         };
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
@@ -447,8 +624,24 @@
     async function addNote(note) {
       const db = await openDB();
       return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const tx = db.transaction([STORE_NAME, STATS_STORE], 'readwrite');
+        // Save note (immutable - once saved, never modified)
         tx.objectStore(STORE_NAME).add(note);
+        // Update tag stats
+        const statsStore = tx.objectStore(STATS_STORE);
+        for (const tag of note.tags) {
+          const getReq = statsStore.get(tag);
+          getReq.onsuccess = () => {
+            const existing = getReq.result;
+            if (existing) {
+              existing.count += 1;
+              existing.lastUsed = note.timestamp;
+              statsStore.put(existing);
+            } else {
+              statsStore.add({ tag, count: 1, firstUsed: note.timestamp, lastUsed: note.timestamp });
+            }
+          };
+        }
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
       });
@@ -456,9 +649,35 @@
 
     async function deleteNote(id) {
       const db = await openDB();
+      // Get note first to update stats
+      const note = await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).get(id);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+
       return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const tx = db.transaction([STORE_NAME, STATS_STORE], 'readwrite');
         tx.objectStore(STORE_NAME).delete(id);
+        // Decrement tag stats
+        if (note && note.tags) {
+          const statsStore = tx.objectStore(STATS_STORE);
+          for (const tag of note.tags) {
+            const getReq = statsStore.get(tag);
+            getReq.onsuccess = () => {
+              const existing = getReq.result;
+              if (existing) {
+                existing.count -= 1;
+                if (existing.count <= 0) {
+                  statsStore.delete(tag);
+                } else {
+                  statsStore.put(existing);
+                }
+              }
+            };
+          }
+        }
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
       });
@@ -474,18 +693,33 @@
       });
     }
 
-    // ==================== Auto Tagging ====================
+    async function getTagStats() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STATS_STORE, 'readonly');
+        const req = tx.objectStore(STATS_STORE).getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    // ==================== Auto Tagging Engine ====================
     const TAG_RULES = [
-      { keywords: ['할일', '해야', 'todo', 'TODO', '하기', '해놓', '잊지말'], tag: '할일' },
-      { keywords: ['아이디어', '생각', '떠오른', '영감', 'idea'], tag: '아이디어' },
-      { keywords: ['회의', '미팅', 'meeting', '논의', '협의'], tag: '회의' },
-      { keywords: ['읽기', '읽을', '책', 'book', '아티클', '기사', '블로그'], tag: '읽기' },
-      { keywords: ['사기', '구매', '주문', '장보기', '쇼핑', '사야'], tag: '쇼핑' },
-      { keywords: ['링크', 'http', 'www', '.com', '.kr', 'url'], tag: '링크' },
-      { keywords: ['일정', '약속', '날짜', '시간', '몇시', '오전', '오후', '내일', '모레', '다음주'], tag: '일정' },
-      { keywords: ['코드', 'code', 'bug', '버그', '에러', 'error', 'function', 'const ', 'let '], tag: '개발' },
-      { keywords: ['요리', '레시피', '맛집', '음식', '메뉴'], tag: '음식' },
-      { keywords: ['운동', '헬스', '러닝', '산책', '걷기', '스트레칭'], tag: '운동' },
+      { keywords: ['할일', '해야', 'todo', 'TODO', '하기', '해놓', '잊지말', '꼭', '반드시', '필수'], tag: '할일' },
+      { keywords: ['아이디어', '생각', '떠오른', '영감', 'idea', '어떨까', '해보면', '시도'], tag: '아이디어' },
+      { keywords: ['회의', '미팅', 'meeting', '논의', '협의', '회의록', '참석'], tag: '회의' },
+      { keywords: ['읽기', '읽을', '책', 'book', '아티클', '기사', '블로그', '논문', '리뷰'], tag: '읽기' },
+      { keywords: ['사기', '구매', '주문', '장보기', '쇼핑', '사야', '결제', '배송'], tag: '쇼핑' },
+      { keywords: ['링크', 'http', 'www', '.com', '.kr', 'url', '.io', '.net'], tag: '링크' },
+      { keywords: ['일정', '약속', '날짜', '시간', '몇시', '오전', '오후', '내일', '모레', '다음주', '이번주'], tag: '일정' },
+      { keywords: ['코드', 'code', 'bug', '버그', '에러', 'error', 'function', 'const ', 'let ', 'git', 'deploy', '배포', 'api', 'API'], tag: '개발' },
+      { keywords: ['요리', '레시피', '맛집', '음식', '메뉴', '저녁', '점심', '아침밥'], tag: '음식' },
+      { keywords: ['운동', '헬스', '러닝', '산책', '걷기', '스트레칭', '루틴', '체중'], tag: '운동' },
+      { keywords: ['공부', '학습', '강의', '수업', '시험', '정리', '노트', '복습', '예습'], tag: '공부' },
+      { keywords: ['감정', '기분', '느낌', '행복', '슬프', '화나', '좋았', '힘들', '고마', '감사', '사랑'], tag: '감정' },
+      { keywords: ['돈', '비용', '지출', '수입', '월급', '저축', '투자', '가격', '원', '만원'], tag: '가계' },
+      { keywords: ['영화', '드라마', '넷플릭스', '유튜브', '게임', '음악', '노래', '공연', '전시'], tag: '문화' },
+      { keywords: ['여행', '비행기', '호텔', '숙소', '관광', '티켓', '항공'], tag: '여행' },
     ];
 
     function autoTag(text) {
@@ -496,12 +730,15 @@
           tags.push(rule.tag);
         }
       }
+      // If no tags matched, assign "memo"
+      if (tags.length === 0) {
+        tags.push('메모');
+      }
       return tags;
     }
 
-    // ==================== UI Logic ====================
+    // ==================== UI Elements ====================
     const noteInput = document.getElementById('noteInput');
-    const tagInput = document.getElementById('tagInput');
     const saveBtn = document.getElementById('saveBtn');
     const searchToggle = document.getElementById('searchToggle');
     const searchBar = document.getElementById('searchBar');
@@ -510,15 +747,23 @@
     const notesContainer = document.getElementById('notesContainer');
     const exportBtn = document.getElementById('exportBtn');
     const toast = document.getElementById('toast');
+    const tagPreview = document.getElementById('tagPreview');
+    const statsToggle = document.getElementById('statsToggle');
+    const statsPanel = document.getElementById('statsPanel');
+    const statsGrid = document.getElementById('statsGrid');
+    const statsSummary = document.getElementById('statsSummary');
+    const statsTotal = document.getElementById('statsTotal');
 
     let activeFilter = null;
 
+    // ==================== Toast ====================
     function showToast(msg) {
       toast.textContent = msg;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
+    // ==================== Date/Time Formatting ====================
     function formatDate(dateStr) {
       const d = new Date(dateStr);
       const today = new Date();
@@ -545,6 +790,28 @@
       return `${period} ${hour}:${m}`;
     }
 
+    // ==================== Live Tag Preview ====================
+    let previewTimer = null;
+    noteInput.addEventListener('input', () => {
+      // Auto-resize
+      noteInput.style.height = 'auto';
+      noteInput.style.height = Math.min(noteInput.scrollHeight, 200) + 'px';
+
+      // Debounced tag preview
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(() => {
+        const text = noteInput.value.trim();
+        if (!text) {
+          tagPreview.innerHTML = '<span class="label">자동 태그:</span>';
+          return;
+        }
+        const tags = autoTag(text);
+        tagPreview.innerHTML = '<span class="label">자동 태그:</span>' +
+          tags.map(t => `<span class="preview-tag">#${t}</span>`).join('');
+      }, 300);
+    });
+
+    // ==================== Grouping & Rendering ====================
     function groupByDate(notes) {
       const groups = {};
       for (const note of notes) {
@@ -552,36 +819,20 @@
         if (!groups[date]) groups[date] = [];
         groups[date].push(note);
       }
-      // Sort dates descending
       const sorted = Object.keys(groups).sort((a, b) => b.localeCompare(a));
       return sorted.map(date => ({ date, notes: groups[date].sort((a, b) => b.timestamp - a.timestamp) }));
     }
 
-    function getAllTags(notes) {
-      const tagSet = new Set();
+    function getTagCounts(notes) {
+      const counts = {};
       for (const note of notes) {
-        if (note.tags) note.tags.forEach(t => tagSet.add(t));
+        if (note.tags) {
+          for (const t of note.tags) {
+            counts[t] = (counts[t] || 0) + 1;
+          }
+        }
       }
-      return [...tagSet].sort();
-    }
-
-    function renderFilterBar(notes) {
-      const tags = getAllTags(notes);
-      if (tags.length === 0) {
-        filterBar.innerHTML = '';
-        return;
-      }
-      filterBar.innerHTML = tags.map(tag =>
-        `<button class="filter-tag ${activeFilter === tag ? 'active' : ''}" data-tag="${tag}">#${tag}</button>`
-      ).join('');
-
-      filterBar.querySelectorAll('.filter-tag').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const tag = btn.dataset.tag;
-          activeFilter = activeFilter === tag ? null : tag;
-          render();
-        });
-      });
+      return counts;
     }
 
     function escapeHtml(str) {
@@ -597,11 +848,105 @@
       return escaped.replace(regex, '<mark style="background:var(--tag-bg);color:var(--tag-text);border-radius:2px;padding:0 2px">$1</mark>');
     }
 
+    // ==================== Render Filter Bar ====================
+    function renderFilterBar(notes) {
+      const counts = getTagCounts(notes);
+      const tags = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+
+      if (tags.length === 0) {
+        filterBar.innerHTML = '';
+        return;
+      }
+
+      filterBar.innerHTML = tags.map(tag =>
+        `<button class="filter-tag ${activeFilter === tag ? 'active' : ''}" data-tag="${tag}">
+          #${tag} <span class="count">${counts[tag]}</span>
+        </button>`
+      ).join('');
+
+      filterBar.querySelectorAll('.filter-tag').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tag = btn.dataset.tag;
+          activeFilter = activeFilter === tag ? null : tag;
+          render();
+        });
+      });
+    }
+
+    // ==================== Render Stats Panel ====================
+    async function renderStats() {
+      const notes = await getAllNotes();
+      const counts = getTagCounts(notes);
+      const tags = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+      const totalNotes = notes.length;
+      const totalTags = tags.length;
+      const totalTagUsage = Object.values(counts).reduce((a, b) => a + b, 0);
+      const maxCount = Math.max(...Object.values(counts), 1);
+
+      statsTotal.textContent = `총 ${totalNotes}개 메모`;
+
+      // Summary row
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayCount = notes.filter(n => n.date === todayStr).length;
+      const thisWeek = notes.filter(n => {
+        const diff = (new Date() - new Date(n.timestamp)) / (1000 * 60 * 60 * 24);
+        return diff <= 7;
+      }).length;
+
+      statsSummary.innerHTML = `
+        <div class="summary-item">
+          <div class="summary-value">${totalNotes}</div>
+          <div class="summary-label">전체 메모</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">${todayCount}</div>
+          <div class="summary-label">오늘</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">${thisWeek}</div>
+          <div class="summary-label">이번 주</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">${totalTags}</div>
+          <div class="summary-label">태그 종류</div>
+        </div>
+      `;
+
+      // Tag cards
+      if (tags.length === 0) {
+        statsGrid.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:10px">아직 태그 데이터가 없습니다</div>';
+        return;
+      }
+
+      statsGrid.innerHTML = tags.map(tag => {
+        const count = counts[tag];
+        const percent = ((count / totalNotes) * 100).toFixed(1);
+        const barWidth = ((count / maxCount) * 100).toFixed(0);
+        return `
+          <div class="stat-card ${activeFilter === tag ? 'active' : ''}" data-tag="${tag}">
+            <div class="stat-tag-name">#${tag}</div>
+            <div class="stat-count">${count}</div>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:${barWidth}%"></div></div>
+            <div class="stat-percent">${percent}% of all</div>
+          </div>
+        `;
+      }).join('');
+
+      statsGrid.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const tag = card.dataset.tag;
+          activeFilter = activeFilter === tag ? null : tag;
+          render();
+          renderStats();
+        });
+      });
+    }
+
+    // ==================== Main Render ====================
     async function render() {
       let notes = await getAllNotes();
       const query = searchInput.value.trim().toLowerCase();
 
-      // Filter by search
       if (query) {
         notes = notes.filter(n =>
           n.text.toLowerCase().includes(query) ||
@@ -609,12 +954,11 @@
         );
       }
 
-      // Filter by tag
       if (activeFilter) {
         notes = notes.filter(n => n.tags && n.tags.includes(activeFilter));
       }
 
-      renderFilterBar(await getAllNotes()); // Always show all tags
+      renderFilterBar(await getAllNotes());
 
       if (notes.length === 0) {
         notesContainer.innerHTML = `
@@ -635,10 +979,14 @@
           ${g.notes.map(n => `
             <div class="note-card" data-id="${n.id}">
               <button class="note-delete" title="삭제">&times;</button>
+              <span class="note-locked">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                수정 불가
+              </span>
               <div class="note-text">${highlightText(n.text, query)}</div>
               <div class="note-meta">
                 <div class="note-tags">
-                  ${(n.tags || []).map(t => `<span class="tag" data-tag="${t}">#${t}</span>`).join('')}
+                  ${(n.tags || []).map(t => `<span class="tag auto-tag" data-tag="${t}">#${t}</span>`).join('')}
                 </div>
                 <span class="note-time">${formatTime(n.timestamp)}</span>
               </div>
@@ -653,10 +1001,11 @@
           e.stopPropagation();
           const card = btn.closest('.note-card');
           const id = card.dataset.id;
-          if (confirm('이 메모를 삭제할까요?')) {
+          if (confirm('이 메모를 삭제할까요?\n(삭제만 가능하며, 수정은 불가합니다)')) {
             await deleteNote(id);
             showToast('삭제됨');
             render();
+            if (statsPanel.classList.contains('show')) renderStats();
           }
         });
       });
@@ -666,40 +1015,40 @@
         tagEl.addEventListener('click', () => {
           activeFilter = activeFilter === tagEl.dataset.tag ? null : tagEl.dataset.tag;
           render();
+          if (statsPanel.classList.contains('show')) renderStats();
         });
       });
     }
 
-    // Save note
+    // ==================== Save Note (Immutable) ====================
     async function saveNote() {
       const text = noteInput.value.trim();
       if (!text) return;
 
       const now = new Date();
-      const manualTags = tagInput.value.split(',').map(t => t.trim()).filter(Boolean);
-      const autoTags = autoTag(text);
-      const allTags = [...new Set([...manualTags, ...autoTags])];
+      const tags = autoTag(text);
 
       const note = {
         id: now.getTime().toString(36) + Math.random().toString(36).slice(2, 6),
         text,
-        tags: allTags,
+        tags,
         date: now.toISOString().split('T')[0],
         timestamp: now.getTime(),
+        locked: true, // Immutable flag - memo can never be edited
       };
 
       await addNote(note);
       noteInput.value = '';
-      tagInput.value = '';
       noteInput.style.height = 'auto';
-      showToast('저장됨');
+      tagPreview.innerHTML = '<span class="label">자동 태그:</span>';
+      showToast(`저장됨 — ${tags.map(t => '#' + t).join(' ')}`);
       render();
+      if (statsPanel.classList.contains('show')) renderStats();
       noteInput.focus();
     }
 
     saveBtn.addEventListener('click', saveNote);
 
-    // Ctrl+Enter to save
     noteInput.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
@@ -707,13 +1056,7 @@
       }
     });
 
-    // Auto-resize textarea
-    noteInput.addEventListener('input', () => {
-      noteInput.style.height = 'auto';
-      noteInput.style.height = Math.min(noteInput.scrollHeight, 200) + 'px';
-    });
-
-    // Search toggle
+    // ==================== Search Toggle ====================
     searchToggle.addEventListener('click', () => {
       searchBar.classList.toggle('show');
       searchToggle.classList.toggle('active');
@@ -725,11 +1068,18 @@
       }
     });
 
-    searchInput.addEventListener('input', () => {
-      render();
+    searchInput.addEventListener('input', () => render());
+
+    // ==================== Stats Toggle ====================
+    statsToggle.addEventListener('click', () => {
+      statsPanel.classList.toggle('show');
+      statsToggle.classList.toggle('active');
+      if (statsPanel.classList.contains('show')) {
+        renderStats();
+      }
     });
 
-    // Export today's notes as text
+    // ==================== Export ====================
     exportBtn.addEventListener('click', async () => {
       const notes = await getAllNotes();
       const today = new Date().toISOString().split('T')[0];
@@ -747,12 +1097,10 @@
         md += `- **${time}**${tags}\n  ${n.text.replace(/\n/g, '\n  ')}\n\n`;
       }
 
-      // Copy to clipboard
       try {
         await navigator.clipboard.writeText(md);
         showToast('오늘 메모가 클립보드에 복사됨');
       } catch {
-        // Fallback: download as file
         const blob = new Blob([md], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -764,10 +1112,9 @@
       }
     });
 
-    // Initial render
+    // ==================== Init ====================
     render();
 
-    // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
