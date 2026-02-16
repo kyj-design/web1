@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./backend/uploads:/app/backend/uploads
+      - ./backend/static:/app/backend/static
+    environment:
+      - PYTHONPATH=/app
+    env_file:
+      - .env
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - db
+    networks:
+      - canva-etsy-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: npm run dev -- --host
+    networks:
+      - canva-etsy-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=canva_etsy
+      - POSTGRES_PASSWORD=canva_etsy_password
+      - POSTGRES_DB=canva_etsy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - canva-etsy-network
+    # SQLite을 사용하는 경우 이 서비스는 주석 처리
+
+  # Redis for Celery (나중에)
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - canva-etsy-network
+
+  # Celery worker (나중에)
+  # celery_worker:
+  #   build:
+  #     context: .
+  #     dockerfile: backend/Dockerfile
+  #   command: celery -A backend.tasks.celery_tasks worker --loglevel=info
+  #   volumes:
+  #     - .:/app
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - backend
+  #     - redis
+  #   networks:
+  #     - canva-etsy-network
+
+volumes:
+  postgres_data:
+  # redis_data:
+
+networks:
+  canva-etsy-network:
+    driver: bridge

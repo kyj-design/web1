@@ -1,0 +1,88 @@
+"""
+Canva-Etsy Automation System - FastAPI Backend
+Main application entry point.
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
+from pathlib import Path
+
+from .config import settings
+from .database import init_db
+
+# Create FastAPI app
+app = FastAPI(
+    title="Canva-Etsy Automation API",
+    description="Automate Canva template listing to Etsy with market research and SEO optimization",
+    version="0.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.frontend_url, "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Create upload directories if they don't exist
+Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
+Path(settings.pdf_dir).mkdir(parents=True, exist_ok=True)
+Path(settings.image_dir).mkdir(parents=True, exist_ok=True)
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup."""
+    init_db()
+    print("✅ Database initialized")
+    print(f"📊 Database URL: {settings.database_url}")
+    print(f"🤖 LLM Provider: {settings.llm_provider}")
+
+
+@app.get("/")
+async def root():
+    """Health check endpoint."""
+    return {
+        "status": "ok",
+        "message": "Canva-Etsy Automation API",
+        "version": "0.1.0",
+        "docs": "/docs"
+    }
+
+
+@app.get("/health")
+async def health_check():
+    """Detailed health check."""
+    return {
+        "status": "healthy",
+        "database": "connected" if settings.database_url else "not configured",
+        "llm_provider": settings.llm_provider,
+        "etsy_api": "configured" if settings.etsy_api_key else "not configured"
+    }
+
+
+# Import and include routers (Phase 2+)
+# from .routers import market, templates, listings, bestsellers
+# app.include_router(market.router, prefix="/api/market", tags=["market"])
+# app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
+# app.include_router(listings.router, prefix="/api/listings", tags=["listings"])
+# app.include_router(bestsellers.router, prefix="/api/bestsellers", tags=["bestsellers"])
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "backend.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level=settings.log_level.lower()
+    )
