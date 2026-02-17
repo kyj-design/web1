@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     # Etsy API
     etsy_api_key: str
     etsy_shared_secret: str
-    etsy_callback_url: str = "http://localhost:3000/auth/callback"
+    # Callback은 백엔드 엔드포인트를 가리켜야 함 (/api/auth/etsy/callback)
+    # 프로덕션: https://your-backend-domain.com/api/auth/etsy/callback
+    etsy_callback_url: str = "http://localhost:8000/api/auth/etsy/callback"
     # Phase 5 OAuth 완성 전까지 .env에 직접 설정. OAuth 구현 후 토큰 기반으로 교체 예정.
     etsy_shop_id: str | None = None
 

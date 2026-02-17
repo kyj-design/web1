@@ -17,6 +17,14 @@ logger = logging.getLogger(__name__)
 # Etsy 태그 제한: 최대 13개, 각 20자 이하
 MAX_TAGS = 13
 MAX_TAG_LENGTH = 20
+
+# 태그 부족 시 패딩에 사용할 범용 fallback 태그 (Etsy 최대 13개 보장)
+_SEO_FALLBACK_TAGS = [
+    "canva template", "digital download", "instant download",
+    "printable", "editable template", "digital product",
+    "commercial use", "digital file", "canva design",
+    "edit template", "diy template", "digital art", "pdf template",
+]
 # Etsy 제목 제한: 140자 이하
 MAX_TITLE_LENGTH = 140
 
@@ -113,7 +121,6 @@ class SEOService:
         # Niche에 연결된 키워드 수집
         keywords = []
         if template.niche_id:
-            from ..database import Keyword
             kws = (
                 db.query(Keyword)
                 .filter(Keyword.niche_id == template.niche_id)
@@ -226,12 +233,6 @@ class SEOService:
 
     def _normalize_tags(self, tags: list) -> list[str]:
         """태그 정규화: 20자 절단, 특수문자 제거, 중복 제거, 정확히 13개로 패딩"""
-        _FALLBACK_TAGS = [
-            "canva template", "digital download", "instant download",
-            "printable", "editable template", "digital product",
-            "commercial use", "digital file", "canva design",
-            "edit template", "diy template", "digital art", "pdf template",
-        ]
         cleaned = []
         seen = set()
         for t in tags:
@@ -241,8 +242,8 @@ class SEOService:
                 cleaned.append(tag)
             if len(cleaned) >= MAX_TAGS:
                 break
-        # LLM이 13개 미만을 반환한 경우 fallback으로 채움
-        for ft in _FALLBACK_TAGS:
+        # LLM이 13개 미만을 반환한 경우 모듈 상수로 채움
+        for ft in _SEO_FALLBACK_TAGS:
             if len(cleaned) >= MAX_TAGS:
                 break
             if ft not in seen:

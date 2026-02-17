@@ -86,7 +86,10 @@ class EtsyOAuthService:
             raise ValueError("OAuth state expired (>5 min). Please try again.")
 
         token_data = await self._exchange_code(code, pending["code_verifier"])
-        return self._save_token(token_data, db)
+        token = self._save_token(token_data, db)
+        # shop_id 조회는 비동기로 처리 (이벤트 루프 블로킹 방지)
+        await self._fetch_and_update_shop_info(token, db)
+        return token
 
     async def _exchange_code(self, code: str, code_verifier: str) -> dict:
         """Etsy token endpoint에 code 교환 요청"""
@@ -121,7 +124,9 @@ class EtsyOAuthService:
                 resp = await client.post(ETSY_TOKEN_URL, data=payload)
                 resp.raise_for_status()
                 data = resp.json()
-            return self._save_token(data, db, existing=token)
+            refreshed = self._save_token(data, db, existing=token)
+            # shop_id는 이미 저장되어 있으므로 갱신 불필요 (실패해도 기존 값 유지)
+            return refreshed
         except httpx.HTTPError as e:
             logger.error(f"Token refresh failed: {e}")
             return None
@@ -129,7 +134,10 @@ class EtsyOAuthService:
     def _save_token(
         self, data: dict, db: Session, existing: Optional[OAuthToken] = None
     ) -> OAuthToken:
-        """토큰 데이터를 DB에 저장 (기존 레코드 갱신 또는 신규 생성)"""
+        """
+        토큰 데이터를 DB에 저장 (UPSERT 패턴).
+        - existing이 있으면 업데이트, 없으면 기존 레코드 조회 후 업데이트/신규 생성
+        """
         expires_in = data.get("expires_in")
         expires_at = (
             datetime.utcnow() + timedelta(seconds=int(expires_in))
@@ -137,13 +145,17 @@ class EtsyOAuthService:
             else None
         )
 
+        # UPSERT: 이미 existing이 주어졌거나, DB에 있는 레코드를 재사용
         if existing is None:
-            # 기존 토큰 모두 삭제 (단일 사용자: 최신 1개만 유지)
-            db.query(OAuthToken).delete()
+            existing = db.query(OAuthToken).order_by(OAuthToken.created_at.desc()).first()
+
+        if existing is None:
             token = OAuthToken()
             db.add(token)
         else:
             token = existing
+            # 나머지 오래된 레코드 정리 (단일 사용자 - 중복 방지)
+            db.query(OAuthToken).filter(OAuthToken.id != token.id).delete()
 
         token.access_token = data["access_token"]
         token.refresh_token = data.get("refresh_token") or getattr(token, "refresh_token", None)
@@ -151,47 +163,33 @@ class EtsyOAuthService:
         token.expires_at = expires_at
         token.scope = data.get("scope", ETSY_SCOPES)
 
+        db.flush()   # shop_id 조회 전에 token.id 확정
         db.commit()
         db.refresh(token)
-
-        # shop_id를 토큰 메타데이터에서 자동 추출 (Etsy는 access_token에 shop_id 포함)
-        self._fetch_and_update_shop_info(token, db)
         return token
 
-    def _fetch_and_update_shop_info(self, token: OAuthToken, db: Session) -> None:
+    async def _fetch_and_update_shop_info(self, token: OAuthToken, db: Session) -> None:
         """
-        access_token 저장 후 Etsy /v3/application/users/me 호출로
-        shop_id와 shop_name을 동기 방식으로 업데이트 (선택적 실패 무시).
+        access_token 저장 후 Etsy /v3/application/shops/me 호출로
+        shop_id와 shop_name을 비동기로 업데이트 (실패 시 무시).
         """
-        import httpx as _httpx
         try:
-            resp = _httpx.get(
-                "https://openapi.etsy.com/v3/application/users/me",
-                headers={
-                    "x-api-key": settings.etsy_api_key,
-                    "Authorization": f"Bearer {token.access_token}",
-                },
-                timeout=10.0,
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                shop_id = str(data.get("primary_email") or "")  # fallback
-                # Etsy /users/me doesn't return shop_id directly; use /shops/me
-                shops_resp = _httpx.get(
+            headers = {
+                "x-api-key": settings.etsy_api_key,
+                "Authorization": f"Bearer {token.access_token}",
+            }
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(
                     "https://openapi.etsy.com/v3/application/shops/me",
-                    headers={
-                        "x-api-key": settings.etsy_api_key,
-                        "Authorization": f"Bearer {token.access_token}",
-                    },
-                    timeout=10.0,
+                    headers=headers,
                 )
-                if shops_resp.status_code == 200:
-                    shop_data = shops_resp.json()
-                    token.shop_id = str(shop_data.get("shop_id", ""))
-                    token.shop_name = shop_data.get("shop_name", "")
-                    db.commit()
-                    db.refresh(token)
-                    logger.info(f"Shop info saved: {token.shop_name} (id={token.shop_id})")
+            if resp.status_code == 200:
+                shop_data = resp.json()
+                token.shop_id = str(shop_data.get("shop_id", ""))
+                token.shop_name = shop_data.get("shop_name", "")
+                db.commit()
+                db.refresh(token)
+                logger.info(f"Shop info saved: {token.shop_name} (id={token.shop_id})")
         except Exception as e:
             logger.warning(f"Could not fetch shop info: {e}. shop_id will be empty.")
 

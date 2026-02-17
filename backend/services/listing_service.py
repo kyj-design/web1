@@ -120,9 +120,14 @@ class ListingService:
             raise ValueError(f"Listing {listing_id} not found")
 
         # OAuth 토큰이 있으면 Bearer 인증으로 발행 (없으면 API 키 단독 또는 Mock)
+        # get_valid_access_token은 만료 시 자동 갱신하여 최신 토큰을 반환
         access_token = await etsy_oauth_service.get_valid_access_token(db)
-        oauth_token = etsy_oauth_service.get_stored_token(db)
-        shop_id = (oauth_token.shop_id if oauth_token else None) or settings.etsy_shop_id
+        # access_token이 있는 경우만 해당 토큰의 shop_id 사용, 없으면 .env config 값 사용
+        stored_token = etsy_oauth_service.get_stored_token(db) if access_token else None
+        shop_id = (
+            (stored_token.shop_id if stored_token and stored_token.shop_id else None)
+            or settings.etsy_shop_id
+        )
 
         result = await etsy_service.create_draft_listing(
             title=listing.title,

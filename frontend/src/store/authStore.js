@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api' })
+const api = axios.create({ baseURL: (import.meta.env.VITE_API_BASE_URL || '') + '/api' })
 
 const useAuthStore = create((set, get) => ({
   // ── 상태 ────────────────────────────────────────
