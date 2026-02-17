@@ -33,13 +33,15 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
 )
 
-# Create upload directories if they don't exist
+# Create upload directories if they don't exist (StaticFiles 마운트 전에 생성 필수)
+_static_dir = Path("backend/static")
+_static_dir.mkdir(parents=True, exist_ok=True)
 Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
 Path(settings.pdf_dir).mkdir(parents=True, exist_ok=True)
 Path(settings.image_dir).mkdir(parents=True, exist_ok=True)
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 
 @app.on_event("startup")
@@ -95,8 +97,9 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
 if __name__ == "__main__":
     import uvicorn
-    _host = os.environ.get("APP_HOST", "127.0.0.1")
-    _port = int(os.environ.get("APP_PORT", "8000"))
+    _host = os.environ.get("APP_HOST", "0.0.0.0")
+    # Railway는 PORT, 로컬은 APP_PORT (기본 8000)
+    _port = int(os.environ.get("PORT", os.environ.get("APP_PORT", "8000")))
     _reload = os.environ.get("APP_ENV", "production") == "development"
     uvicorn.run(
         "backend.main:app",
