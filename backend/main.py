@@ -69,12 +69,15 @@ async def health_check():
     }
 
 
-# Import and include routers (Phase 2+)
-# from .routers import market, templates, listings, bestsellers
-# app.include_router(market.router, prefix="/api/market", tags=["market"])
+# Phase 2: Market Research & Bestseller Analysis routers
+from .routers import market, bestsellers
+app.include_router(market.router, prefix="/api/market", tags=["market"])
+app.include_router(bestsellers.router, prefix="/api/bestsellers", tags=["bestsellers"])
+
+# Phase 3+ (미구현)
+# from .routers import templates, listings
 # app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
 # app.include_router(listings.router, prefix="/api/listings", tags=["listings"])
-# app.include_router(bestsellers.router, prefix="/api/bestsellers", tags=["bestsellers"])
 
 
 if __name__ == "__main__":
