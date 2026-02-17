@@ -5,6 +5,7 @@ import MarketResearch from './pages/MarketResearch'
 import Bestsellers from './pages/Bestsellers'
 import Templates from './pages/Templates'
 import Listings from './pages/Listings'
+import Settings from './pages/Settings'
 import './App.css'
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="/bestsellers" element={<Bestsellers />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/listings" element={<Listings />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
       </div>

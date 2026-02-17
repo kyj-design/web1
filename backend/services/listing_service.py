@@ -10,6 +10,7 @@ from sqlalchemy import func
 from ..config import settings
 from ..database import CanvaTemplate, DeliveryPDF, EtsyListing, SEOContent
 from ..services.etsy_service import etsy_service
+from ..services.etsy_oauth_service import etsy_oauth_service
 
 logger = logging.getLogger(__name__)
 
@@ -118,12 +119,18 @@ class ListingService:
         if not listing:
             raise ValueError(f"Listing {listing_id} not found")
 
+        # OAuth 토큰이 있으면 Bearer 인증으로 발행 (없으면 API 키 단독 또는 Mock)
+        access_token = await etsy_oauth_service.get_valid_access_token(db)
+        oauth_token = etsy_oauth_service.get_stored_token(db)
+        shop_id = (oauth_token.shop_id if oauth_token else None) or settings.etsy_shop_id
+
         result = await etsy_service.create_draft_listing(
             title=listing.title,
             description=listing.description,
             tags=listing.tags,
             price=listing.price,
-            shop_id=settings.etsy_shop_id,
+            shop_id=shop_id,
+            access_token=access_token,
         )
 
         # etsy_listing_id 저장 및 상태 업데이트

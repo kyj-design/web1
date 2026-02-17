@@ -1,6 +1,8 @@
 """
 Etsy API Service - Etsy API v3 클라이언트
-API 키가 없거나 요청 실패 시 자동으로 Mock 데이터를 반환합니다.
+- OAuth 토큰이 있으면 Bearer 인증 사용 (Phase 5+)
+- 없으면 x-api-key만 사용 (Phase 1~4 호환)
+- API 키가 없거나 요청 실패 시 자동으로 Mock 데이터를 반환
 """
 import httpx
 import logging
@@ -155,6 +157,16 @@ class EtsyService:
             "state": "active",
         }
 
+    def _build_headers(self, access_token: Optional[str] = None) -> dict:
+        """
+        API 요청 헤더 구성.
+        OAuth access_token이 있으면 Bearer 인증, 없으면 x-api-key만 사용.
+        """
+        headers = {"x-api-key": self.api_key}
+        if access_token:
+            headers["Authorization"] = f"Bearer {access_token}"
+        return headers
+
     async def create_draft_listing(
         self,
         title: str,
@@ -163,18 +175,22 @@ class EtsyService:
         price: float,
         quantity: int = 999,
         listing_type: str = "download",
-        shop_id: str = None,
+        shop_id: Optional[str] = None,
+        access_token: Optional[str] = None,
     ) -> dict:
         """
         Etsy에 디지털 다운로드 리스팅 생성 (draft 상태).
-        API 미설정 시 Mock 응답 반환.
+        - access_token(OAuth): 있으면 Bearer 인증 사용
+        - shop_id: 없으면 config의 etsy_shop_id 사용
+        - API 미설정 시 Mock 응답 반환
         POST /v3/application/shops/{shop_id}/listings
         """
         if self._use_mock:
             logger.info("Mock mode: Simulating Etsy listing creation")
             return self._mock_create_listing(title, price)
 
-        if not shop_id:
+        resolved_shop_id = shop_id or settings.etsy_shop_id
+        if not resolved_shop_id:
             logger.warning("No Etsy shop_id configured. Using mock response.")
             return self._mock_create_listing(title, price)
 
@@ -192,14 +208,12 @@ class EtsyService:
             "state": "draft",
             "type": listing_type,
         }
-        headers = {
-            "x-api-key": self.api_key,
-            "Content-Type": "application/json",
-        }
+        headers = self._build_headers(access_token)
+        headers["Content-Type"] = "application/json"
         try:
             async with httpx.AsyncClient(timeout=20.0) as client:
                 resp = await client.post(
-                    f"{ETSY_API_BASE}/application/shops/{shop_id}/listings",
+                    f"{ETSY_API_BASE}/application/shops/{resolved_shop_id}/listings",
                     json=payload,
                     headers=headers,
                 )

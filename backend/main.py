@@ -79,7 +79,7 @@ async def health_check():
 
 
 # Phase 2: Market Research & Bestseller Analysis routers
-from .routers import market, bestsellers, templates, listings
+from .routers import market, bestsellers, templates, listings, auth
 app.include_router(market.router, prefix="/api/market", tags=["market"])
 app.include_router(bestsellers.router, prefix="/api/bestsellers", tags=["bestsellers"])
 
@@ -88,6 +88,9 @@ app.include_router(templates.router, prefix="/api/templates", tags=["templates"]
 
 # Phase 4: SEO Optimization & Etsy Listings
 app.include_router(listings.router, prefix="/api/listings", tags=["listings"])
+
+# Phase 5: Etsy OAuth 2.0 Authentication
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
 
 if __name__ == "__main__":

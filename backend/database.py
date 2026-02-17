@@ -1,7 +1,7 @@
 """
 Database configuration and session management.
 """
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON, Text, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON, Text, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -160,6 +160,22 @@ class BestsellerTemplate(Base):
 
     # Relationships
     niche = relationship("Niche", back_populates="bestsellers")
+
+
+class OAuthToken(Base):
+    """Etsy OAuth 2.0 토큰 저장 (단일 사용자 - 최신 레코드 사용)"""
+    __tablename__ = "oauth_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    access_token = Column(Text, nullable=False)
+    refresh_token = Column(Text, nullable=True)
+    token_type = Column(String, default="Bearer")
+    expires_at = Column(DateTime, nullable=True)        # None이면 만료 없음
+    shop_id = Column(String, nullable=True)
+    shop_name = Column(String, nullable=True)
+    scope = Column(String, nullable=True)               # space-separated scope string
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 # Dependency to get DB session
