@@ -182,7 +182,7 @@ class SEOService:
             ],
             "stream": False,
         }
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{settings.ollama_base_url}/api/chat",
                 json=payload,
@@ -225,7 +225,13 @@ class SEOService:
             raise ValueError(f"Invalid JSON from LLM: {json_str[:200]}")
 
     def _normalize_tags(self, tags: list) -> list[str]:
-        """태그 정규화: 20자 절단, 특수문자 제거, 중복 제거, 최대 13개"""
+        """태그 정규화: 20자 절단, 특수문자 제거, 중복 제거, 정확히 13개로 패딩"""
+        _FALLBACK_TAGS = [
+            "canva template", "digital download", "instant download",
+            "printable", "editable template", "digital product",
+            "commercial use", "digital file", "canva design",
+            "edit template", "diy template", "digital art", "pdf template",
+        ]
         cleaned = []
         seen = set()
         for t in tags:
@@ -235,6 +241,13 @@ class SEOService:
                 cleaned.append(tag)
             if len(cleaned) >= MAX_TAGS:
                 break
+        # LLM이 13개 미만을 반환한 경우 fallback으로 채움
+        for ft in _FALLBACK_TAGS:
+            if len(cleaned) >= MAX_TAGS:
+                break
+            if ft not in seen:
+                seen.add(ft)
+                cleaned.append(ft)
         return cleaned
 
     def seo_to_dict(self, seo: SEOContent) -> dict:

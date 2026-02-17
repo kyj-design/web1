@@ -71,6 +71,7 @@ async def _analyze_template_image(template_id: int, image_url: str):
             db.commit()
             logger.info(f"Image analysis completed for template {template_id}")
     except Exception as e:
+        db.rollback()
         logger.error(f"Background image analysis failed for template {template_id}: {e}")
     finally:
         db.close()

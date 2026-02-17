@@ -7,6 +7,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
+from ..config import settings
 from ..database import CanvaTemplate, DeliveryPDF, EtsyListing, SEOContent
 from ..services.etsy_service import etsy_service
 
@@ -122,6 +123,7 @@ class ListingService:
             description=listing.description,
             tags=listing.tags,
             price=listing.price,
+            shop_id=settings.etsy_shop_id,
         )
 
         # etsy_listing_id 저장 및 상태 업데이트
