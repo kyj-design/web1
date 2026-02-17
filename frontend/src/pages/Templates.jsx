@@ -267,16 +267,32 @@ function TemplateCard({
           </p>
         )}
 
-        {/* 링크 */}
-        <a
-          href={template.template_link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 transition-colors mb-3 truncate"
-        >
-          <ExternalLink className="w-3 h-3 flex-shrink-0" />
-          <span className="truncate">{template.template_link}</span>
-        </a>
+        {/* 링크 — canva.com URL만 허용 */}
+        {(() => {
+          let safeHref = null;
+          try {
+            const parsed = new URL(template.template_link);
+            if (parsed.protocol === 'https:' && parsed.hostname.endsWith('canva.com')) {
+              safeHref = template.template_link;
+            }
+          } catch (_) {}
+          return safeHref ? (
+            <a
+              href={safeHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 transition-colors mb-3 truncate"
+            >
+              <ExternalLink className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">{template.template_link}</span>
+            </a>
+          ) : (
+            <span className="flex items-center gap-1 text-xs text-gray-400 mb-3 truncate">
+              <ExternalLink className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">{template.template_link}</span>
+            </span>
+          );
+        })()}
 
         {/* PDF 개수 */}
         <div className="flex items-center gap-1 text-xs text-gray-400 mb-3">

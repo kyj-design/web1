@@ -22,10 +22,10 @@ export default function Dashboard() {
     fetchStats()
     axios.get('/api/templates/stats')
       .then((r) => setTemplateStats(r.data))
-      .catch(() => {})
+      .catch((err) => console.error('Failed to fetch template stats:', err?.message))
     axios.get('/api/listings/stats')
       .then((r) => setListingStats(r.data))
-      .catch(() => {})
+      .catch((err) => console.error('Failed to fetch listing stats:', err?.message))
   }, [])
 
   if (loading.stats && !stats) {

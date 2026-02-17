@@ -121,7 +121,7 @@ class MarketResearchService:
         )
         profit_score = self._calc_profit_score(analysis)
 
-        niche = db.query(Niche).filter(Niche.name == keyword).first()
+        niche = db.query(Niche).filter(Niche.name == keyword).with_for_update().first()
 
         if niche:
             niche.search_volume = analysis["search_volume"]

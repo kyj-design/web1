@@ -209,8 +209,9 @@ async def publish_listing(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
+    from ..services.etsy_service import etsy_service as _etsy_svc
     return {
         "message": "Listing published to Etsy",
         "listing": listing_service.listing_to_dict(listing, with_template=True),
-        "is_mock": not listing.etsy_listing_id or listing.etsy_listing_id.startswith("9"),
+        "is_mock": _etsy_svc._use_mock,
     }

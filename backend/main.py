@@ -21,12 +21,16 @@ app = FastAPI(
 )
 
 # CORS middleware
+_allowed_origins = [settings.frontend_url]
+if settings.frontend_url != "http://localhost:3000":
+    _allowed_origins.append("http://localhost:3000")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, "http://localhost:3000"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
 )
 
 # Create upload directories if they don't exist
@@ -42,8 +46,13 @@ app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 async def startup_event():
     """Initialize database on startup."""
     init_db()
+    # Mask credentials in DB URL for safe logging
+    _db_url = settings.database_url
+    if "@" in _db_url:
+        _db_url = _db_url.split("@")[-1]
+        _db_url = f"...@{_db_url}"
     print("✅ Database initialized")
-    print(f"📊 Database URL: {settings.database_url}")
+    print(f"📊 Database: {_db_url}")
     print(f"🤖 LLM Provider: {settings.llm_provider}")
 
 
@@ -83,10 +92,13 @@ app.include_router(listings.router, prefix="/api/listings", tags=["listings"])
 
 if __name__ == "__main__":
     import uvicorn
+    _host = os.environ.get("APP_HOST", "127.0.0.1")
+    _port = int(os.environ.get("APP_PORT", "8000"))
+    _reload = os.environ.get("APP_ENV", "production") == "development"
     uvicorn.run(
         "backend.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
+        host=_host,
+        port=_port,
+        reload=_reload,
         log_level=settings.log_level.lower()
     )

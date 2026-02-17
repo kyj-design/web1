@@ -125,7 +125,10 @@ class ListingService:
         )
 
         # etsy_listing_id 저장 및 상태 업데이트
-        listing.etsy_listing_id = str(result.get("listing_id", ""))
+        etsy_id = result.get("listing_id")
+        if not etsy_id:
+            raise ValueError("Etsy API returned no listing_id")
+        listing.etsy_listing_id = str(etsy_id)
         listing.status = "published"
         db.commit()
         db.refresh(listing)

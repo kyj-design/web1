@@ -2,6 +2,8 @@
 Templates Router - Canva 템플릿 관리 및 PDF 생성 API
 """
 import os
+import re
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
@@ -230,14 +232,26 @@ def download_pdf(
     if not pdf_record:
         raise HTTPException(status_code=404, detail="PDF not found")
 
-    if not os.path.exists(pdf_record.file_path):
+    # Path traversal 방지: PDF 디렉토리 내부에만 접근 허용
+    from ..config import settings as _settings
+    pdf_dir = Path(_settings.pdf_dir).resolve()
+    try:
+        pdf_path = Path(pdf_record.file_path).resolve()
+        pdf_path.relative_to(pdf_dir)
+    except (ValueError, RuntimeError):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if not pdf_path.exists():
         raise HTTPException(status_code=404, detail="PDF file not found on disk")
 
     template = db.query(CanvaTemplate).filter(CanvaTemplate.id == template_id).first()
-    filename = f"{template.name.replace(' ', '_')}_delivery.pdf" if template else "delivery.pdf"
+    # 파일명 특수문자 제거
+    raw_name = template.name if template else "delivery"
+    safe_name = re.sub(r"[^\w\s-]", "", raw_name).strip().replace(" ", "_")
+    filename = f"{safe_name}_delivery.pdf"
 
     return FileResponse(
-        path=pdf_record.file_path,
+        path=str(pdf_path),
         media_type="application/pdf",
         filename=filename,
     )

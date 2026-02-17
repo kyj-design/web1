@@ -2,7 +2,9 @@
 Configuration management for Canva-Etsy Automation system.
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 from functools import lru_cache
+from typing import Literal
 
 
 class Settings(BaseSettings):
@@ -14,7 +16,7 @@ class Settings(BaseSettings):
     etsy_callback_url: str = "http://localhost:3000/auth/callback"
 
     # AI/LLM Provider
-    llm_provider: str = "ollama"  # "ollama" or "openai"
+    llm_provider: Literal["ollama", "openai"] = "ollama"
     ollama_model: str = "llama3:8b"
     ollama_base_url: str = "http://localhost:11434"
     openai_api_key: str | None = None

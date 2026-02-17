@@ -18,6 +18,7 @@ from .pdf_service import pdf_service
 logger = logging.getLogger(__name__)
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
 MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
@@ -140,8 +141,11 @@ class TemplateService:
         if len(content) > MAX_IMAGE_SIZE:
             raise ValueError("Image file size exceeds 10 MB limit")
 
-        # 파일 저장
-        ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg"
+        # 파일 확장자 검증 (화이트리스트 기반)
+        raw_ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+        if raw_ext not in ALLOWED_IMAGE_EXTENSIONS:
+            raise ValueError(f"Unsupported file extension: .{raw_ext}")
+        ext = raw_ext
         filename = f"template_{template_id}_{uuid.uuid4().hex[:8]}.{ext}"
         save_path = self.image_dir / filename
 
