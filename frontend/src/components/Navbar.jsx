@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, Search, TrendingUp, LayoutDashboard } from 'lucide-react'
+import { BarChart2, Search, TrendingUp, LayoutDashboard, Layers } from 'lucide-react'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/market', label: 'Market Research', icon: Search },
   { to: '/bestsellers', label: 'Bestsellers', icon: TrendingUp },
+  { to: '/templates', label: 'Templates', icon: Layers },
 ]
 
 export default function Navbar() {
@@ -17,7 +18,7 @@ export default function Navbar() {
             <BarChart2 className="w-6 h-6 text-purple-600" />
             <span className="font-bold text-lg text-gray-900">Canva-Etsy</span>
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full ml-1">
-              Phase 2
+              Phase 3
             </span>
           </div>
 

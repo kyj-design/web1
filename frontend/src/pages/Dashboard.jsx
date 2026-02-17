@@ -8,14 +8,20 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { Search, TrendingUp, Layers, Image, ArrowRight } from 'lucide-react'
+import { Search, TrendingUp, Layers, Image, ArrowRight, FileText } from 'lucide-react'
 import useMarketStore from '../store/marketStore'
+import axios from 'axios'
+import { useState } from 'react'
 
 export default function Dashboard() {
   const { stats, loading, fetchStats } = useMarketStore()
+  const [templateStats, setTemplateStats] = useState(null)
 
   useEffect(() => {
     fetchStats()
+    axios.get('/api/templates/stats')
+      .then((r) => setTemplateStats(r.data))
+      .catch(() => {})
   }, [])
 
   if (loading.stats && !stats) {
@@ -47,7 +53,7 @@ export default function Dashboard() {
       </p>
 
       {/* 요약 카드 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <StatCard
           label="Total Niches"
           value={marketStats?.total_niches ?? 0}
@@ -61,16 +67,28 @@ export default function Dashboard() {
           color="blue"
         />
         <StatCard
-          label="Bestsellers Tracked"
+          label="Bestsellers"
           value={bestsellerStats?.total ?? 0}
           icon={Layers}
           color="green"
         />
         <StatCard
-          label="Images Analyzed"
+          label="Analyzed"
           value={bestsellerStats?.analyzed ?? 0}
           icon={Image}
           color="orange"
+        />
+        <StatCard
+          label="Templates"
+          value={templateStats?.total_templates ?? 0}
+          icon={FileText}
+          color="purple"
+        />
+        <StatCard
+          label="PDFs Generated"
+          value={templateStats?.total_pdfs ?? 0}
+          icon={FileText}
+          color="blue"
         />
       </div>
 
@@ -146,7 +164,7 @@ export default function Dashboard() {
       </div>
 
       {/* 빠른 액션 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <QuickActionCard
           to="/market"
           title="Run Market Research"
@@ -162,6 +180,14 @@ export default function Dashboard() {
           cta="Analyze Now"
           color="blue"
           icon={TrendingUp}
+        />
+        <QuickActionCard
+          to="/templates"
+          title="Manage Templates"
+          description="Register Canva template links and generate delivery PDFs for buyers."
+          cta="Go to Templates"
+          color="green"
+          icon={FileText}
         />
       </div>
     </div>
@@ -194,6 +220,7 @@ function QuickActionCard({ to, title, description, cta, color, icon: Icon }) {
   const btnColors = {
     purple: 'bg-purple-600 hover:bg-purple-700',
     blue: 'bg-blue-600 hover:bg-blue-700',
+    green: 'bg-green-600 hover:bg-green-700',
   }
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6 flex flex-col">

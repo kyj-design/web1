@@ -3,6 +3,7 @@ import Navbar from './components/Navbar'
 import Dashboard from './pages/Dashboard'
 import MarketResearch from './pages/MarketResearch'
 import Bestsellers from './pages/Bestsellers'
+import Templates from './pages/Templates'
 import './App.css'
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/market" element={<MarketResearch />} />
             <Route path="/bestsellers" element={<Bestsellers />} />
+            <Route path="/templates" element={<Templates />} />
           </Routes>
         </main>
       </div>

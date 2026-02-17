@@ -1,4 +1,4 @@
 """Routers package."""
-from . import market, bestsellers
+from . import market, bestsellers, templates
 
-__all__ = ["market", "bestsellers"]
+__all__ = ["market", "bestsellers", "templates"]
