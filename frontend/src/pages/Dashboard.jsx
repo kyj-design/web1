@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { Search, TrendingUp, Layers, Image, ArrowRight, FileText } from 'lucide-react'
+import { Search, TrendingUp, Layers, Image, ArrowRight, FileText, ShoppingBag } from 'lucide-react'
 import useMarketStore from '../store/marketStore'
 import axios from 'axios'
 import { useState } from 'react'
@@ -16,11 +16,15 @@ import { useState } from 'react'
 export default function Dashboard() {
   const { stats, loading, fetchStats } = useMarketStore()
   const [templateStats, setTemplateStats] = useState(null)
+  const [listingStats, setListingStats] = useState(null)
 
   useEffect(() => {
     fetchStats()
     axios.get('/api/templates/stats')
       .then((r) => setTemplateStats(r.data))
+      .catch(() => {})
+    axios.get('/api/listings/stats')
+      .then((r) => setListingStats(r.data))
       .catch(() => {})
   }, [])
 
@@ -49,11 +53,11 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
       <p className="text-gray-500 text-sm mb-6">
-        Canva-Etsy Automation · Phase 2: Market Research & Bestseller Analysis
+        Canva-Etsy Automation · Phase 4: SEO Optimization & Etsy Listings
       </p>
 
       {/* 요약 카드 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
         <StatCard
           label="Total Niches"
           value={marketStats?.total_niches ?? 0}
@@ -85,10 +89,22 @@ export default function Dashboard() {
           color="purple"
         />
         <StatCard
-          label="PDFs Generated"
+          label="PDFs"
           value={templateStats?.total_pdfs ?? 0}
           icon={FileText}
           color="blue"
+        />
+        <StatCard
+          label="Listings"
+          value={listingStats?.total_listings ?? 0}
+          icon={ShoppingBag}
+          color="green"
+        />
+        <StatCard
+          label="Published"
+          value={listingStats?.published ?? 0}
+          icon={ShoppingBag}
+          color="orange"
         />
       </div>
 
@@ -164,10 +180,10 @@ export default function Dashboard() {
       </div>
 
       {/* 빠른 액션 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickActionCard
           to="/market"
-          title="Run Market Research"
+          title="Market Research"
           description="Discover profitable niches with keyword analysis using Etsy search data."
           cta="Start Research"
           color="purple"
@@ -188,6 +204,14 @@ export default function Dashboard() {
           cta="Go to Templates"
           color="green"
           icon={FileText}
+        />
+        <QuickActionCard
+          to="/listings"
+          title="Etsy Listings"
+          description="Generate AI-powered SEO content and publish listings directly to Etsy."
+          cta="Create Listing"
+          color="orange"
+          icon={ShoppingBag}
         />
       </div>
     </div>
@@ -221,6 +245,7 @@ function QuickActionCard({ to, title, description, cta, color, icon: Icon }) {
     purple: 'bg-purple-600 hover:bg-purple-700',
     blue: 'bg-blue-600 hover:bg-blue-700',
     green: 'bg-green-600 hover:bg-green-700',
+    orange: 'bg-orange-500 hover:bg-orange-600',
   }
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6 flex flex-col">

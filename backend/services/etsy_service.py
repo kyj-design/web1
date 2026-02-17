@@ -155,6 +155,71 @@ class EtsyService:
             "state": "active",
         }
 
+    async def create_draft_listing(
+        self,
+        title: str,
+        description: str,
+        tags: list,
+        price: float,
+        quantity: int = 999,
+        listing_type: str = "download",
+        shop_id: str = None,
+    ) -> dict:
+        """
+        Etsy에 디지털 다운로드 리스팅 생성 (draft 상태).
+        API 미설정 시 Mock 응답 반환.
+        POST /v3/application/shops/{shop_id}/listings
+        """
+        if self._use_mock:
+            logger.info("Mock mode: Simulating Etsy listing creation")
+            return self._mock_create_listing(title, price)
+
+        if not shop_id:
+            logger.warning("No Etsy shop_id configured. Using mock response.")
+            return self._mock_create_listing(title, price)
+
+        price_minor = int(round(price * 100))
+        payload = {
+            "title": title[:140],
+            "description": description,
+            "price": price_minor,
+            "quantity": quantity,
+            "tags": tags[:13],
+            "who_made": "i_did",
+            "when_made": "made_to_order",
+            "taxonomy_id": 2078,  # Digital > Templates
+            "is_digital": True,
+            "state": "draft",
+            "type": listing_type,
+        }
+        headers = {
+            "x-api-key": self.api_key,
+            "Content-Type": "application/json",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                resp = await client.post(
+                    f"{ETSY_API_BASE}/application/shops/{shop_id}/listings",
+                    json=payload,
+                    headers=headers,
+                )
+                resp.raise_for_status()
+                return resp.json()
+        except httpx.HTTPError as e:
+            logger.error(f"Etsy create_listing failed: {e}. Returning mock.")
+            return self._mock_create_listing(title, price)
+
+    def _mock_create_listing(self, title: str, price: float) -> dict:
+        """Mock Etsy listing 생성 응답"""
+        mock_id = str(random.randint(900000000, 999999999))
+        return {
+            "listing_id": mock_id,
+            "title": title,
+            "price": {"amount": int(price * 100), "divisor": 100, "currency_code": "USD"},
+            "state": "draft",
+            "is_mock": True,
+        }
+
 
 # 싱글턴 인스턴스
 etsy_service = EtsyService()
