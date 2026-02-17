@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./backend/uploads:/app/backend/uploads
+      - ./backend/static:/app/backend/static
+    environment:
+      - PYTHONPATH=/app
+      - APP_ENV=development   # 개발모드: reload 활성화. 운영시 production으로 변경
+    env_file:
+      - .env
+    # Docker 내에서는 0.0.0.0 바인딩 필요 (포트 매핑으로 외부 접근 제한됨)
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - canva-etsy-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: npm run dev -- --host
+    networks:
+      - canva-etsy-network
+
+  # ── PostgreSQL (선택사항) ─────────────────────────────
+  # SQLite 사용 시 아래 주석을 유지하고 .env에서:
+  #   DATABASE_URL=sqlite:///./canva_etsy.db
+  #
+  # PostgreSQL 사용 시 아래 주석 해제 후 .env에서:
+  #   DATABASE_URL=postgresql://canva_etsy:canva_etsy_password@db:5432/canva_etsy
+  #
+  # db:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     - POSTGRES_USER=canva_etsy
+  #     - POSTGRES_PASSWORD=canva_etsy_password
+  #     - POSTGRES_DB=canva_etsy
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - canva-etsy-network
+
+  # Redis for Celery (나중에)
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - canva-etsy-network
+
+  # Celery worker (나중에)
+  # celery_worker:
+  #   build:
+  #     context: .
+  #     dockerfile: backend/Dockerfile
+  #   command: celery -A backend.tasks.celery_tasks worker --loglevel=info
+  #   volumes:
+  #     - .:/app
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - backend
+  #     - redis
+  #   networks:
+  #     - canva-etsy-network
+
+volumes:
+  # postgres_data:
+  # redis_data:
+
+networks:
+  canva-etsy-network:
+    driver: bridge
